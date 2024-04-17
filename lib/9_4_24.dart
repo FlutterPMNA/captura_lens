@@ -47,11 +47,15 @@ class _DatePickerExampleState extends State<DatePickerExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: OutlinedButton(
-          onPressed: () => _selectDate(context),
-          child: Text('Open Date Picker'),
-        ),
+      body: Column(
+        children: [
+          Center(
+            child: OutlinedButton(
+              onPressed: () => _selectDate(context),
+              child: Text('Open Date Picker'),
+            ),
+          ),
+        ],
       ),
     );
   }

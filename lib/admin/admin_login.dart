@@ -1,5 +1,6 @@
 import 'package:captura_lens/admin/admin_event_post.dart';
 import 'package:captura_lens/admin/admin_home.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +15,14 @@ class AdminLogin extends StatefulWidget {
 }
 
 class _AdminLoginState extends State<AdminLogin> {
+
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
   bool _isChecked = false;
+  bool _isObscured = true;
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +32,7 @@ class _AdminLoginState extends State<AdminLogin> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        leading: Icon(
-          Icons.arrow_back,
-          color: CupertinoColors.white,
-        ),
+        iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: CupertinoColors.black,
       ),
       body: SingleChildScrollView(
@@ -59,76 +64,124 @@ class _AdminLoginState extends State<AdminLogin> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20), color: Colors.white),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const TextField(
-                    decoration: InputDecoration(
-                        prefixIcon: Icon(
-                          Icons.mail_outline,
-                          color: CustomColors.buttonGreen,
-                        ),
-                        hintText: 'Email Address',
-                        border: OutlineInputBorder()),
-                  ),
-                  const SizedBox(height: 20.0),
-                  const TextField(
-                    decoration: InputDecoration(
-                        hintText: 'Password',
-                        prefixIcon: Icon(
-                          Icons.lock_outline,
-                          color: CustomColors.buttonGreen,
-                        ),
-                        border: OutlineInputBorder()),
-                    obscureText: true,
-                  ),
-                  Row(
-                      children: [
-                        Checkbox(
-                            value: _isChecked,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                _isChecked = value!;
-                              });
-                            }),
-                        const Text(
-                          "Remember Me",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Spacer(),
-                        TextButton(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextFormField(
+                      controller: _emailController,
+                      validator: (email) {
+                        if (email == null || email.isEmpty) {
+                          return 'Please enter your email';
+                        }
+
+                        final emailRegex =
+                        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                        if (!emailRegex.hasMatch(email)) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                      decoration: const InputDecoration(
+                          prefixIcon: Icon(
+                            Icons.mail_outline,
+                            color: CustomColors.buttonGreen,
+                          ),
+                          hintText: 'Email Address',
+                          border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 20.0),
+                    TextFormField(
+                      controller: _passwordController,
+                      validator: (password) {
+                        if (password == null || password.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        if (password!.length < 6) {
+                          return "Password should be at least 6 characters";
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                          hintText: 'Password',
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: CustomColors.buttonGreen,
+                          ),
+                          suffixIcon: IconButton(
                             onPressed: () {
+                              setState(() {
+                                _isObscured = !_isObscured;
+                              });
+                            },
+                            icon: _isObscured
+                                ? const Icon(CupertinoIcons.eye_slash)
+                                : const Icon(CupertinoIcons.eye),
+                            color: CustomColors.buttonGreen,
+                          ),
+                          border: const OutlineInputBorder()),
+                      obscureText: _isObscured,
+                    ),
+                    Row(
+                        children: [
+                          Checkbox(
+                              value: _isChecked,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  _isChecked = value!;
+                                });
+                              }),
+                          const Text(
+                            "Remember Me",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Spacer(),
+                          TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ForgotPassword()));
+                              },
+                              child: Text("Forgot Password?"))
+                        ],
+                      ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 40),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            foregroundColor: Colors.white,
+                            backgroundColor: CustomColors.buttonGreen),
+                        onPressed: () {
+                          if(_formKey.currentState!.validate()){
+                            FirebaseAuth.instance
+                                .signInWithEmailAndPassword(
+                                email: _emailController.text,
+                                password: _passwordController.text)
+                                .then((value) {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => ForgotPassword()));
-                            },
-                            child: Text("Forgot Password?"))
-                      ],
+                                      builder: (context) =>
+                                      const AdminHome()));
+                            }).onError((error, stackTrace) {
+                              print("Error: $error");
+                            });
+                          }
+                        },
+                        child: Text('Login'),
+                      ),
                     ),
-                  SizedBox(
-                    height: 20,
-                  ),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: TextButton(
-                      style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 40),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          foregroundColor: Colors.white,
-                          backgroundColor: CustomColors.buttonGreen),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const AdminHome()));
-                      },
-                      child: Text('Login'),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
           ],

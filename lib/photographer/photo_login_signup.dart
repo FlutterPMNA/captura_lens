@@ -2,10 +2,12 @@ import 'package:captura_lens/admin/admin_event_post.dart';
 import 'package:captura_lens/forgot_password.dart';
 import 'package:captura_lens/photographer/photo_home.dart';
 import 'package:captura_lens/photographer/photo_send_otp.dart';
+import 'package:captura_lens/services/database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:random_string/random_string.dart';
 
 import '../constants.dart';
 
@@ -30,6 +32,7 @@ class _PhotoLoginSignUpState extends State<PhotoLoginSignUp> {
 
   bool _isLogin = true;
   bool _isChecked = false;
+  bool _isObscured = true;
 
   @override
   Widget build(BuildContext context) {
@@ -191,14 +194,25 @@ class _PhotoLoginSignUpState extends State<PhotoLoginSignUp> {
                     ),
                     const SizedBox(height: 20.0),
                     TextFormField(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                           hintText: 'Password',
-                          prefixIcon: Icon(
+                          prefixIcon: const Icon(
                             Icons.lock_outline,
                             color: CustomColors.buttonGreen,
                           ),
-                          border: OutlineInputBorder()),
-                      obscureText: true,
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _isObscured = !_isObscured;
+                              });
+                            },
+                            icon: _isObscured
+                                ? const Icon(CupertinoIcons.eye_slash)
+                                : const Icon(CupertinoIcons.eye),
+                            color: CustomColors.buttonGreen,
+                          ),
+                          border: const OutlineInputBorder()),
+                      obscureText: _isObscured,
                       controller: _passwordController,
                       validator: (password) {
                         if (password == null || password.isEmpty) {
@@ -386,7 +400,18 @@ class _PhotoLoginSignUpState extends State<PhotoLoginSignUp> {
                                       .createUserWithEmailAndPassword(
                                           email: _emailController.text,
                                           password: _passwordController.text)
-                                      .then((value) {
+                                      .then((value) async{
+                                String id = randomAlphaNumeric(10);
+                                Map<String, dynamic> photoInfoMap = {
+                                  "Email Address": _emailController.text,
+                                  "Password": _passwordController.text,
+                                  "Place": _placeController.text,
+                                  "Type of Photography": _typeController.text,
+                                  "Aadhaar Number": _aadhaarController.text,
+                                  "Phone Number": _phoneController.text,
+                                  "id": id
+                                };
+                                await DataBaseMethods().addPhotoDetails(photoInfoMap, id);
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute(

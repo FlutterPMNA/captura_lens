@@ -72,6 +72,7 @@ class _AdminHomeState extends State<AdminHome> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.black12,
         onTap: _onItemTapped,
+        showSelectedLabels: false,
       ),
     );
   }

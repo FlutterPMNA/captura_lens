@@ -1,5 +1,9 @@
+import 'package:captura_lens/photographer/photo_profile.dart';
+import 'package:captura_lens/services/database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:random_string/random_string.dart';
 
 import 'constants.dart';
 
@@ -11,6 +15,12 @@ class ComplaintsPage extends StatefulWidget {
 }
 
 class _ComplaintsPageState extends State<ComplaintsPage> {
+  final _formKey = GlobalKey<FormState>();
+
+  TextEditingController complaintsController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,8 +41,14 @@ class _ComplaintsPageState extends State<ComplaintsPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 30,),
-                        Text('We are very Sorry to have an issue with you', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        Text(
+                          'We are very Sorry to have an issue with you',
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ],
@@ -45,65 +61,83 @@ class _ComplaintsPageState extends State<ComplaintsPage> {
             SingleChildScrollView(
               physics: const ScrollPhysics(),
               child: Container(
-                decoration: BoxDecoration(color: Colors.white,borderRadius: BorderRadius.circular(20)),
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 70,
-                    ),
-                    Container(
-                      width: 350,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.black, // Border color
-                          width: 1, // Border width
-                          style: BorderStyle.solid, // Dotted border style
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20)),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 70,
+                      ),
+                      TextFormField(
+                        controller: complaintsController,
+                        decoration: const InputDecoration(
+                          hintText: 'Type your Complaints',
+                          border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10))),
                         ),
                       ),
-                      padding: const EdgeInsets.all(6),
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Type your Complaints Here"),
-                          SizedBox(
-                            height: 30,
-                          ),
-                        ],
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    TextFormField(
-                      decoration: const InputDecoration(
-                        hintText: 'Enter Your Name',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10))),
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter Your Name',
+                          border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10))),
+                        ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    TextFormField(
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        hintText: 'Phone Number',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10))),
+                      const SizedBox(
+                        height: 20,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {},
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: CustomColors.buttonGreen,
-                          foregroundColor: Colors.white),
-                      child: const Text("Submit"),
-                    )
-                  ],
+                      TextFormField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          hintText: 'Phone Number',
+                          border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(10))),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          String id = randomAlphaNumeric(10);
+                          Map<String, dynamic> complaintsInfoMap = {
+                            "Complaint": complaintsController.text,
+                            "Name": nameController.text,
+                            "Phone": phoneController.text,
+                            "id": id
+                          };
+                          await DataBaseMethods()
+                              .complaintsDetails(complaintsInfoMap, id).then((value) {
+                            Fluttertoast.showToast(
+                                msg: "Complaint Registered",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.CENTER,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: Colors.grey,
+                                textColor: Colors.white,
+                                fontSize: 16.0);
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=> PhotoProfile(isPhoto: true)));
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: CustomColors.buttonGreen,
+                            foregroundColor: Colors.white),
+                        child: const Text("Submit"),
+                      )
+                    ],
+                  ),
                 ),
               ),
             )

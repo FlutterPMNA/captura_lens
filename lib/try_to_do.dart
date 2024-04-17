@@ -1,50 +1,199 @@
+import 'package:captura_lens/to_do_admin_home.dart';
+import 'package:captura_lens/to_do_admin_model.dart';
 import 'package:flutter/material.dart';
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+
+class Homeone extends StatefulWidget {
+  const Homeone({super.key});
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<Homeone> createState() => _HomeoneState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  DateTime selectedDate = DateTime.now();
+class _HomeoneState extends State<Homeone> {
+  List<AdminModel>? list; // Original list of events
+  List<AdminModel>? filteredList; // Filtered list of events
+  AdminModel? adminModel;
+  AdminController obj3 = AdminController();
+  TextEditingController searchController = TextEditingController();
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2000,1,1),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != selectedDate) {
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+
+    // Add a listener to the search controller to filter the list based on the query
+    searchController.addListener(() {
       setState(() {
-        selectedDate = picked;
+        filterList();
       });
-    }
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> fetchData() async {
+    list = await obj3.fetchAllEvents();
+    setState(() {
+      filteredList = list; // Initially, filteredList contains all events
+    });
+  }
+
+  void filterList() {
+    final query = searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        filteredList = list; // If query is empty, show all events
+      } else {
+        filteredList = list?.where((event) {
+          return event.title.toLowerCase().contains(query) ||
+              event.deadline.toLowerCase().contains(query) ||
+              event.price.toLowerCase().contains(query);
+        }).toList();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('DateTime Picker Example'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              "${selectedDate.toLocal()}".split(' ')[0],
-              style: TextStyle(fontSize: 55, fontWeight: FontWeight.bold),
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(100.0),
+          child: Container(
+            height: 100.0,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(20.0),
+              ),
             ),
-            SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: () => _selectDate(context),
-              child: Text('Select date'),
+            child: AppBar(
+              toolbarHeight: 100,
+              automaticallyImplyLeading: false,
+              backgroundColor: Colors.black,
+              title: TextFormField(
+                controller: searchController,
+                decoration: InputDecoration(
+                  suffixIcon: Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  hintText: "Search",
+                  hintStyle: TextStyle(color: Colors.black),
+                ),
+              ),
             ),
-          ],
+          ),
         ),
-      ),
+        body: filteredList == null
+            ? Center(child: CircularProgressIndicator())
+            : Container(
+          height: MediaQuery.of(context).size.height,
+          child: Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: filteredList?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      final event = filteredList![index];
+                      return GestureDetector(
+                        onTap: () {
+                          // Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //         builder: (context) => const PhotoEventDetails()));
+                        },
+                        child: Container(
+                          height: 200,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(
+                                  color: Colors.grey)),
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Column(
+                                  children: [
+                                    Container(
+                                      color: Colors.grey,
+                                      width: 50,
+                                      height: 70,
+                                      child: Center(
+                                          child: Text("Photo")),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                  width: 30,
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment
+                                        .start,
+                                    children: [
+                                      Text(
+                                        event.title,
+                                        style: TextStyle(
+                                            fontWeight:
+                                            FontWeight
+                                                .bold),
+                                      ),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Text(
+                                        event.deadline,
+                                        style: TextStyle(
+                                            fontWeight:
+                                            FontWeight
+                                                .bold),
+                                      ),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          event.price,
+                                          style: TextStyle(
+                                              fontWeight:
+                                              FontWeight
+                                                  .bold),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 8,
+                                      ),
+                                      Text(
+                                        event.place,
+                                        style: TextStyle(
+                                            fontWeight:
+                                            FontWeight
+                                                .bold),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )
     );
   }
 }

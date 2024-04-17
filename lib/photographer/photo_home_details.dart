@@ -1,7 +1,10 @@
 import 'package:captura_lens/photographer/photo_event_details.dart';
+import 'package:captura_lens/services/database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class PhotoHomeDetails extends StatefulWidget {
   const PhotoHomeDetails({super.key});
@@ -11,6 +14,105 @@ class PhotoHomeDetails extends StatefulWidget {
 }
 
 class _PhotoHomeDetailsState extends State<PhotoHomeDetails> {
+  Stream? competitionStream;
+
+  getOnTheLoad() async {
+    competitionStream = await DataBaseMethods().getCompetitionDetails();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    getOnTheLoad();
+    super.initState();
+  }
+
+  Widget allCompetitionDetails() {
+    return StreamBuilder(
+        stream: competitionStream,
+        builder: (context, AsyncSnapshot snapshot) {
+          return snapshot.hasData
+              ? ListView.builder(
+                  itemCount: snapshot.data.docs.length,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot ds = snapshot.data.docs[index];
+                    return Container(
+                      height: 130,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey)),
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Column(
+                              children: [
+                                Container(
+                                  color: Colors.grey,
+                                  width: 50,
+                                  height: 70,
+                                  child: ds.exists
+                                      ? Image.network(ds["Image"],)
+                                      : const Center(child: Text("Photo")),
+                                ),
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                Text(
+                                  "Paid/Unpaid",
+                                  style: TextStyle(fontSize: 8),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              width: 30,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    ds["Title"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Text(
+                                    ds["Prize and Description"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Text(
+                                    ds["Deadline"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Text(
+                                    ds["Place"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  })
+              : Container();
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -41,98 +143,13 @@ class _PhotoHomeDetailsState extends State<PhotoHomeDetails> {
               ],
             ),
           ),
-          Container(
-            child: Expanded(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: 20,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const PhotoEventDetails()));
-                          },
-                          child: Container(
-                            height: 130,
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(color: Colors.grey)),
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Column(
-                                    children: [
-                                      Container(
-                                        color: Colors.grey,
-                                        width: 50,
-                                        height: 70,
-                                        child: Center(child: Text("Photo")),
-                                      ),
-                                      SizedBox(
-                                        height: 20,
-                                      ),
-                                      Text(
-                                        "Paid/Unpaid",
-                                        style: TextStyle(fontSize: 8),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    width: 30,
-                                  ),
-                                  const Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Title of the Contest",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        SizedBox(
-                                          height: 8,
-                                        ),
-                                        Text(
-                                          "Description of the contest",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        SizedBox(
-                                          height: 8,
-                                        ),
-                                        Text(
-                                          "Deadline Date",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        SizedBox(
-                                          height: 8,
-                                        ),
-                                        Text(
-                                          "Place of the contest",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(child: InkWell(onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => PhotoEventDetails()));
+                },child: allCompetitionDetails())),
+              ],
             ),
           )
         ],

@@ -1,9 +1,8 @@
 import 'package:captura_lens/services/database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import '../photographer/photo_event_details.dart';
 
 class AdminHomeDetails extends StatefulWidget {
   const AdminHomeDetails({super.key});
@@ -13,13 +12,11 @@ class AdminHomeDetails extends StatefulWidget {
 }
 
 class _AdminHomeDetailsState extends State<AdminHomeDetails> {
+  Stream? competitionStream;
 
-  Stream? CompetitionStream;
   getOnTheLoad() async {
-    CompetitionStream = await DataBaseMethods().getCompetitionDetails();
-    setState(() {
-
-    });
+    competitionStream = await DataBaseMethods().getCompetitionDetails();
+    setState(() {});
   }
 
   @override
@@ -28,89 +25,89 @@ class _AdminHomeDetailsState extends State<AdminHomeDetails> {
     super.initState();
   }
 
-
   Widget allCompetitionDetails() {
     return StreamBuilder(
-        stream: CompetitionStream,
+        stream: competitionStream,
         builder: (context, AsyncSnapshot snapshot) {
-          return snapshot.hasError?  Text(snapshot.error.toString()):
-           snapshot.hasData
+          return snapshot.hasData
               ? ListView.builder(
-              itemCount: snapshot.data.docs.length,
-              itemBuilder: (context, index) {
-                DocumentSnapshot ds = snapshot.data.docs[index];
-                return Container(
-                  height: 130,
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey)),
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Column(
+                  itemCount: snapshot.data.docs.length,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot ds = snapshot.data.docs[index];
+                    return Container(
+                      height: 130,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey)),
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
                           children: [
-                            Container(
-                              color: Colors.grey,
-                              width: 50,
-                              height: 70,
-                              child: Center(child: Text("Photo")),
+                            Column(
+                              children: [
+                                Container(
+                                  color: Colors.grey,
+                                  width: 50,
+                                  height: 70,
+                                  child: ds.exists
+                                      ? Image.network(ds["Image"],)
+                                      : const Center(child: Text("Photo")),
+                                ),
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                Text(
+                                  "Paid/Unpaid",
+                                  style: TextStyle(fontSize: 8),
+                                ),
+                              ],
                             ),
                             const SizedBox(
-                              height: 20,
+                              width: 30,
                             ),
-                            const Text(
-                              "Paid/Unpaid",
-                              style: TextStyle(fontSize: 8),
-                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    ds["Title"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Text(
+                                    ds["Prize and Description"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Text(
+                                    ds["Deadline"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(
+                                    height: 8,
+                                  ),
+                                  Text(
+                                    ds["Place"],
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            )
                           ],
                         ),
-                        const SizedBox(
-                          width: 30,
-                        ),
-                        Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              ds["Title"],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Text(
-                              ds["Prize and Description"],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Text(
-                              ds["Deadline"],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Text(
-                              ds["Place"],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                );
-              }
-                        )
-              : Container(color: Colors.grey,height: 400,width: 300,);
+                      ),
+                    );
+                  })
+              : Container();
         });
   }
 
@@ -137,15 +134,20 @@ class _AdminHomeDetailsState extends State<AdminHomeDetails> {
                 SizedBox(width: 8.0),
                 IconButton(
                   icon: Icon(Icons.menu),
-                  onPressed: () {},
+                  onPressed: () {
+                    FirebaseAuth.instance.signOut();
+                  },
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
-            child:Expanded(child:allCompetitionDetails() ,) ,
-          ),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(child: allCompetitionDetails()),
+              ],
+            ),
+          )
         ],
       ),
     );

@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:captura_lens/constants.dart';
 import 'package:captura_lens/services/database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
@@ -81,10 +83,12 @@ class _AdminEventPostState extends State<AdminEventPost> {
 
   Uint8List? _image;
   File? selectedImage;
+  String imageURL = '';
 
-  Future _pickImageFromGallery()async{
-    final returnImage = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if(returnImage == null) return;
+  Future _pickImageFromGallery() async {
+    final returnImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (returnImage == null) return;
     setState(() {
       selectedImage = File(returnImage.path);
       _image = File(returnImage.path).readAsBytesSync();
@@ -92,9 +96,10 @@ class _AdminEventPostState extends State<AdminEventPost> {
     Navigator.of(context).pop(); //Close the model-sheet
   }
 
-  Future _pickImageFromCamera()async{
-    final returnImage = await ImagePicker().pickImage(source: ImageSource.camera);
-    if(returnImage == null) return;
+  Future _pickImageFromCamera() async {
+    final returnImage =
+        await ImagePicker().pickImage(source: ImageSource.camera);
+    if (returnImage == null) return;
     setState(() {
       selectedImage = File(returnImage.path);
       _image = File(returnImage.path).readAsBytesSync();
@@ -102,7 +107,9 @@ class _AdminEventPostState extends State<AdminEventPost> {
     Navigator.of(context).pop();
   }
 
-  
+  String uniqueImageName = DateTime.now().microsecondsSinceEpoch.toString();
+
+  DataBaseMethods methods = DataBaseMethods();
 
   @override
   Widget build(BuildContext context) {
@@ -210,8 +217,19 @@ class _AdminEventPostState extends State<AdminEventPost> {
               ),
               ElevatedButton(
                 onPressed: () async {
+                  Reference referenceDirImage =
+                      methods.reference.child('images');
+                  Reference referenceImageToUpload =
+                      referenceDirImage.child(uniqueImageName);
+                  try{
+                    await referenceImageToUpload.putFile(selectedImage!);
+                    imageURL = await referenceImageToUpload.getDownloadURL();
+                  }catch(error){
+                    log(error as num);
+                  }
                   String id = randomAlphaNumeric(10);
                   Map<String, dynamic> competitionInfoMap = {
+                    "Image": imageURL,
                     "Title": titleController.text,
                     "Deadline": dateController.text,
                     "Prize and Description": prizeController.text,

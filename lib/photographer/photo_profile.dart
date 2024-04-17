@@ -27,17 +27,6 @@ class _PhotoProfileState extends State<PhotoProfile> {
     const ComplaintsPage(),
   ];
 
-  var _photo = true;
-
-  bool? get isPhoto => null;
-  @override
-  void initState() {
-    super.initState();
-    setState(() {
-      _photo = isPhoto!;
-    });
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +63,6 @@ class _PhotoProfileState extends State<PhotoProfile> {
                     ],
                   ),
                   const Spacer(),
-                  if(_photo)
                   Expanded(
                     child: Column(
                       children: [
