@@ -21,6 +21,8 @@ class AdminEventPost extends StatefulWidget {
 }
 
 class _AdminEventPostState extends State<AdminEventPost> {
+
+  final _formKey = GlobalKey<FormState>();
   TextEditingController titleController = TextEditingController();
   TextEditingController dateController = TextEditingController();
   TextEditingController prizeController = TextEditingController();
@@ -93,7 +95,7 @@ class _AdminEventPostState extends State<AdminEventPost> {
       selectedImage = File(returnImage.path);
       _image = File(returnImage.path).readAsBytesSync();
     });
-    Navigator.of(context).pop(); //Close the model-sheet
+    Navigator.of(context).pop();
   }
 
   Future _pickImageFromCamera() async {
@@ -118,143 +120,168 @@ class _AdminEventPostState extends State<AdminEventPost> {
         padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           physics: const ScrollPhysics(),
-          child: Column(
-            children: [
-              const SizedBox(
-                height: 70,
-              ),
-              Container(
-                width: 350,
-                height: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.black, // Border color
-                    width: 1, // Border width
-                    style: BorderStyle.solid, // Dotted border style
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const SizedBox(
+                  height: 70,
+                ),
+                Container(
+                  width: 350,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.black, // Border color
+                      width: 1, // Border width
+                      style: BorderStyle.solid, // Dotted border style
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(6),
+                  child: _image != null
+                      ? Container(
+                          decoration: BoxDecoration(
+                              image:
+                                  DecorationImage(image: MemoryImage(_image!))),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("Drop your image here"),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                            ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.deepPurple),
+                                onPressed: () {
+                                  showImagePickerOptions(context);
+                                },
+                                child: const Text(
+                                  "Upload Files",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ))
+                          ],
+                        ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                TextFormField(
+                  controller: titleController,
+                  validator: (title){
+                    if (title== null || title.isEmpty){
+                      return 'Please enter a Title';
+                    }
+                  },
+                  decoration: const InputDecoration(
+                    hintText: 'Title',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
                   ),
                 ),
-                padding: const EdgeInsets.all(6),
-                child: _image != null
-                    ? Container(
-                        decoration: BoxDecoration(
-                            image:
-                                DecorationImage(image: MemoryImage(_image!))),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Drag and dropyour image here"),
-                          SizedBox(
-                            height: 30,
-                          ),
-                          ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.deepPurple),
-                              onPressed: () {
-                                showImagePickerOptions(context);
-                              },
-                              child: const Text(
-                                "Upload Files",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ))
-                        ],
-                      ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              TextFormField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  hintText: 'Title',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10))),
+                const SizedBox(
+                  height: 20,
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                controller: dateController,
-                decoration: InputDecoration(
-                    hintText: 'Deadline in YYYY-MM-DD',
-                    border: const OutlineInputBorder(
+                TextFormField(
+                  controller: dateController,
+                  validator: (date){
+                    if (date== null || date.isEmpty){
+                      return 'Please enter a Deadline';
+                    }
+                  },
+                  decoration: InputDecoration(
+                      hintText: 'Deadline in YYYY-MM-DD',
+                      border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10))),
+                      suffixIcon: IconButton(
+                          onPressed: () => _selectDate(context),
+                          icon: const Icon(
+                            CupertinoIcons.calendar,
+                            color: CustomColors.buttonGreen,
+                          ))),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                TextFormField(
+                  controller: prizeController,
+                  validator: (prize){
+                    if (prize== null || prize.isEmpty){
+                      return 'Please enter Prize and description';
+                    }
+                  },
+                  decoration: const InputDecoration(
+                    hintText: 'Prize and Description',
+                    border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10))),
-                    suffixIcon: IconButton(
-                        onPressed: () => _selectDate(context),
-                        icon: const Icon(
-                          CupertinoIcons.calendar,
-                          color: CustomColors.buttonGreen,
-                        ))),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                controller: prizeController,
-                decoration: const InputDecoration(
-                  hintText: 'Prize and Description',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10))),
+                  ),
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                controller: placeController,
-                decoration: const InputDecoration(
-                  hintText: 'Place of contest Conducted',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10))),
+                const SizedBox(
+                  height: 20,
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Reference referenceDirImage =
+                TextFormField(
+                  controller: placeController,
+                  validator: (place){
+                    if (place== null || place.isEmpty){
+                      return 'Specify the place';
+                    }
+                  },
+                  decoration: const InputDecoration(
+                    hintText: 'Place of contest Conducted',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if(_formKey.currentState!.validate()){
+                      Reference referenceDirImage =
                       methods.reference.child('images');
-                  Reference referenceImageToUpload =
+                      Reference referenceImageToUpload =
                       referenceDirImage.child(uniqueImageName);
-                  try{
-                    await referenceImageToUpload.putFile(selectedImage!);
-                    imageURL = await referenceImageToUpload.getDownloadURL();
-                  }catch(error){
-                    log(error as num);
-                  }
-                  String id = randomAlphaNumeric(10);
-                  Map<String, dynamic> competitionInfoMap = {
-                    "Image": imageURL,
-                    "Title": titleController.text,
-                    "Deadline": dateController.text,
-                    "Prize and Description": prizeController.text,
-                    "Place": placeController.text,
-                    "id": id
-                  };
-                  await DataBaseMethods()
-                      .addAdminCompetition(competitionInfoMap, id)
-                      .then((value) {
-                    Fluttertoast.showToast(
-                        msg: "Data Uploaded Successfully",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.CENTER,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: CustomColors.buttonGreen,
-                    foregroundColor: Colors.white),
-                child: const Text("Upload"),
-              )
-            ],
+                      try{
+                        await referenceImageToUpload.putFile(selectedImage!);
+                        imageURL = await referenceImageToUpload.getDownloadURL();
+                      }catch(error){
+                        log(error as num);
+                      }
+                      String id = randomAlphaNumeric(10);
+                      Map<String, dynamic> competitionInfoMap = {
+                        "Image": imageURL,
+                        "Title": titleController.text,
+                        "Deadline": dateController.text,
+                        "Prize and Description": prizeController.text,
+                        "Place": placeController.text,
+                        "id": id
+                      };
+                      await DataBaseMethods()
+                          .addAdminCompetition(competitionInfoMap, id)
+                          .then((value) {
+                        Fluttertoast.showToast(
+                            msg: "Data Uploaded Successfully",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.CENTER,
+                            timeInSecForIosWeb: 1,
+                            backgroundColor: Colors.grey,
+                            textColor: Colors.white,
+                            fontSize: 16.0);
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: CustomColors.buttonGreen,
+                      foregroundColor: Colors.white),
+                  child: const Text("Upload"),
+                )
+              ],
+            ),
           ),
         ),
       ),

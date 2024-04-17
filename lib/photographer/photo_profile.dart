@@ -1,11 +1,13 @@
 import 'package:captura_lens/about_us.dart';
 import 'package:captura_lens/forgot_password.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import '../complaints_page.dart';
 import '../help_page.dart';
+import '../services/database.dart';
 import '../support_page.dart';
 
 class PhotoProfile extends StatefulWidget {
@@ -18,6 +20,20 @@ class PhotoProfile extends StatefulWidget {
 }
 
 class _PhotoProfileState extends State<PhotoProfile> {
+  Stream? photoProfileStream;
+
+  getOnTheLoad() async {
+    photoProfileStream = await DataBaseMethods().getPhotographerDetails();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    getOnTheLoad();
+    super.initState();
+  }
+
+
 
   final List<Widget> _pages = <Widget>[
     const AboutUs(),
@@ -26,7 +42,6 @@ class _PhotoProfileState extends State<PhotoProfile> {
     const HelpPage(),
     const ComplaintsPage(),
   ];
-
 
   @override
   Widget build(BuildContext context) {
@@ -49,17 +64,14 @@ class _PhotoProfileState extends State<PhotoProfile> {
                   const SizedBox(
                     width: 20,
                   ),
-                  const Column(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Profile Photo and Details"),
-                      SizedBox(
-                        height: 8,
-                      ),
-                      Text("Profile Photo and Details"),
-                      SizedBox(
-                        height: 8,
-                      ),
-                      Text("Profile Photo and Details"),
+                      Text("Email Address"),
+                      SizedBox(height: 3,),
+                      Text("Phone Number"),
+                      SizedBox(height: 3,),
+                      Text("Place"),
                     ],
                   ),
                   const Spacer(),

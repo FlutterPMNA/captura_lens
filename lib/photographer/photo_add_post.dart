@@ -13,7 +13,6 @@ import 'package:random_string/random_string.dart';
 import '../services/database.dart';
 
 class PhotoAddPost extends StatefulWidget {
-
   const PhotoAddPost({super.key});
 
   @override
@@ -66,7 +65,6 @@ class _PhotoAddPostState extends State<PhotoAddPost> {
       selectedImage = File(returnImage.path);
       _image = File(returnImage.path).readAsBytesSync();
     });
-    Navigator.of(context).pop(); //Close the model-sheet
   }
 
   Future _pickImageFromCamera() async {
@@ -77,29 +75,13 @@ class _PhotoAddPostState extends State<PhotoAddPost> {
       selectedImage = File(returnImage.path);
       _image = File(returnImage.path).readAsBytesSync();
     });
-    Navigator.of(context).pop();
   }
 
   File? imageFilePlace;
 
   final firebaseStorage = FirebaseStorage.instance;
-
-  Future addPlaceImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    SettableMetadata metadata = SettableMetadata(contentType: 'image/jpeg');
-    if (pickedFile != null) {
-      final currentTime = TimeOfDay.now();
-      imageFilePlace = File(pickedFile.path);
-      UploadTask uploadTask = firebaseStorage
-          .ref()
-          .child("placeImage/Admin$currentTime")
-          .putFile(imageFilePlace!, metadata);
-      TaskSnapshot snapshot = await uploadTask;
-      String downloadURL = await snapshot.ref.getDownloadURL();
-      return downloadURL;
-    }
-  }
+  String uniqueImageName = DateTime.now().microsecondsSinceEpoch.toString();
+  DataBaseMethods methods = DataBaseMethods();
 
   @override
   Widget build(BuildContext context) {
@@ -116,39 +98,30 @@ class _PhotoAddPostState extends State<PhotoAddPost> {
         actions: [
           TextButton(
               onPressed: () {
-                imageURL= addPlaceImage().toString();
-                print(imageURL);
+                _pickImageFromGallery();
               },
-              child: Text("Edit")),
+              child: const Text("Gallery")),
           TextButton(
               onPressed: () async {
-                String uniqueFileName =
-                    DateTime.now().microsecondsSinceEpoch.toString();
-                ImagePicker imagePicker = ImagePicker();
-                await imagePicker
-                    .pickImage(source: ImageSource.camera)
-                    .then((value) {
-                  print(File(value!.path));
-                });
-                Reference referenceRoot = FirebaseStorage.instance.ref();
-                Reference referenceDirImage = referenceRoot.child('images');
-                Reference referenceImageToUpload = referenceDirImage.child(uniqueFileName);
-                try{
+                Reference referenceDirImage = methods.reference.child('images');
+                Reference referenceImageToUpload =
+                    referenceDirImage.child(uniqueImageName);
+                try {
                   await referenceImageToUpload.putFile(selectedImage!);
                   imageURL = await referenceImageToUpload.getDownloadURL();
-                }catch(error){
+                } catch (error) {
                   print(error);
                 }
                 String id = randomAlphaNumeric(10);
-                Map<String, dynamic> postInfoMap = {
+                Map<String, dynamic> photoPostInfo = {
                   "Image": imageURL,
                   "id": id
                 };
                 await DataBaseMethods()
-                    .photoAddPost(postInfoMap, id)
+                    .photoPost(photoPostInfo, id)
                     .then((value) {
                   Fluttertoast.showToast(
-                      msg: "Image Uploaded Successfully",
+                      msg: "Data Photo Successfully",
                       toastLength: Toast.LENGTH_SHORT,
                       gravity: ToastGravity.CENTER,
                       timeInSecForIosWeb: 1,
@@ -157,33 +130,200 @@ class _PhotoAddPostState extends State<PhotoAddPost> {
                       fontSize: 16.0);
                 });
               },
-              child: const Text("Next"))
+              child: const Text("Camera"))
         ],
       ),
       body: Column(
         children: [
+          SizedBox(
+              height: 300,
+              child: _image != null
+                  ? Container(
+                      decoration: BoxDecoration(
+                          image: DecorationImage(image: MemoryImage(_image!))),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                          color: Colors.grey,
+                          border: Border.all(color: Colors.white)),
+                      child: const Center(child: Text("Selected Photo")),
+                    )),
           Expanded(
             child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.grey, border: Border.all(color: Colors.white)),
-              child: const Center(child: Text("Selected Photo")),
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2),
-                itemCount: 20,
-                itemBuilder: (context, index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
+              color: Colors.black,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Column(
+                            children: [
+                              const Text(
+                                "Brightness",
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 8),
+                              ),
+                              IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    Icons.sunny,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Text(
+                                "Contrast",
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 8),
+                              ),
+                              IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    CupertinoIcons.circle_righthalf_fill,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Text(
+                                "Structure",
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 8),
+                              ),
+                              IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    CupertinoIcons.triangle,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Text(
+                                "Warmth",
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 8),
+                              ),
+                              IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    CupertinoIcons.thermometer,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Text(
+                                "Shadows",
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 8),
+                              ),
+                              IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    Icons.wb_shade,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Text(
+                                "Color",
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 8),
+                              ),
+                              IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    CupertinoIcons.color_filter,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Text(
+                                "Saturation",
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 8),
+                              ),
+                              IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    Icons.water_drop,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              const Text(
+                                "Fade",
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 8),
+                              ),
+                              IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    Icons.cloud_outlined,
+                                    color: Colors.white,
+                                  )),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const Center(child: Text("Photos")),
-                  );
-                }),
+                  ),
+                ],
+              ),
+            ),
           )
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async{
+          Reference referenceDirImage =
+          methods.reference.child('images');
+          Reference referenceImageToUpload =
+          referenceDirImage.child(uniqueImageName);
+          try{
+            await referenceImageToUpload.putFile(selectedImage!);
+            imageURL = await referenceImageToUpload.getDownloadURL();
+          }catch(error){
+            print(error);
+          }
+          String id = randomAlphaNumeric(10);
+          Map<String, dynamic> competitionInfoMap = {
+            "Image": imageURL,
+            "id": id
+          };
+          await DataBaseMethods()
+              .addAdminCompetition(competitionInfoMap, id)
+              .then((value) {
+            Fluttertoast.showToast(
+                msg: "Data Uploaded Successfully",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.grey,
+                textColor: Colors.white,
+                fontSize: 16.0);
+          });
+        },
+        backgroundColor: Colors.grey,
+        foregroundColor: Colors.white,
+        child: Text("Done"),
       ),
     );
   }
